@@ -20,6 +20,7 @@
   "homepage": "https://github.com/Felix-Oniichan-UwU17/BackFireBase#readme",
   "dependencies": {
     "bcrypt": "^5.1.0",
+    "dotenv": "^16.0.3",
     "express.js": "^1.0.0",
     "firebase": "^9.17.1"
   }

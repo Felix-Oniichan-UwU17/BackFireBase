@@ -1,7 +1,7 @@
 const express = require('express')
 const bcrypt = require('bcrypt')
 const {initializeApp} = require('firebase/app')
-const {getFirestore} = require('firebase/firestore')
+const {getFirestore, collection, getDoc, doc, setDoc, getDocs} = require('firebase/firestore')
 require ('dotenv/config')
 
 //Configuracion de FireBase
@@ -20,6 +20,61 @@ const firebaseConfig = {
 
   //Inicializar servidor 
   const app = express()
+
+  app.use(express.json())
+
+  //Rutas para las peticiones 
+  app.post('/registro', (req, res) => {
+    const {name, lastname, email, password, number } = req.body
+
+    //validaciones 
+    if(name.length < 3) {
+      res.json({'alert': 'nombre requiere minimo 3 caracters'})
+    } else if (lastname.length <3){
+      res.json({'alert': 'nombre requiere minimo 3 caracters'})
+    } else if (!email.length) {
+      res.json({'alert': 'debes escribir tu correo electronico'})
+    } else if (password.length < 8) {
+      res.json({'alert': 'password requiere minimo 8 caracters'})
+    } else if (!Number(number) || number.length < 10) {
+      res.json({'alert': 'introduce un numero telefonico correcto'})
+    } else {
+      const users = collection(db, 'users')
+
+      //verificar que el correo no exista en la coleccion
+      getDoc(doc(users, email)).then(user => {
+        if(user.exists()) {
+          res.json({
+            'alert': 'el correo ya existe en la BD'
+          })
+        } else {
+          bcrypt.genSalt(10, (error, salt) => {
+            bcrypt.hash(password, salt, (error, hash) =>{
+              req.body.password = hash
+
+              //Guardar en la base de datos
+              setDoc(doc(users, email), req.body).then(reg =>{
+                res.json({
+                  'alert': 'success',
+                  'data': reg
+                })
+              })
+            })
+          })
+        }
+      })
+    }
+  })
+
+  app.get('/usuarios', (req, res)=> {
+    const users = collection(db, 'users')
+    console.log('usuarios', users)
+
+    res.json({
+      'alert': 'succes',
+      users
+    })
+  })
 
   const PORT = process.env.PORT || 17000
 
