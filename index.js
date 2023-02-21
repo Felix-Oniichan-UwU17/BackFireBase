@@ -27,6 +27,8 @@ const firebaseConfig = {
   app.post('/registro', (req, res) => {
     const {name, lastname, email, password, number } = req.body
 
+
+
     //validaciones 
     if(name.length < 3) {
       res.json({'alert': 'nombre requiere minimo 3 caracters'})
@@ -64,6 +66,53 @@ const firebaseConfig = {
         }
       })
     }
+  })
+
+  app.get('/usuarios', async (req,res) =>{
+    const colRef = await collection(db, 'users')
+    const docsSnap = await getDocs(colRef)
+    let data = [] 
+    docsSnap.forEach(doc => {
+      data.push(doc.data())
+    })
+    res.json({
+      'alert': 'success',
+      data
+    })
+  })
+
+  app.post('/login', (req, res)=> {
+    let {email, password} = req.body
+    if (!email.length || !password.length) {
+      return res.json({
+        'alert': 'no se ha recibido los datos correctamente'
+      })
+    }
+
+    const users = collection(db, 'users')
+    getDoc(doc(users, email))
+    .then(user => {
+      if(!user.exists()){
+        return res.json({
+          'alert': 'Correo no registrado en la base de datos'
+        })
+      }else{
+bcrypt.compare(password, user.data().password, (error, result) => {
+        if (result) {
+          let data = user.data()
+          res.json ({
+            'alert': 'Success',
+            name: data.name,
+            email: data.email
+          })
+        }else {
+          return res.json ({
+            'alert': 'Password incorrecto'
+            })
+          }
+        })
+      }
+    })
   })
 
   app.get('/usuarios', (req, res)=> {
